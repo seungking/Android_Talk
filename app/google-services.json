@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "1006693360202",
+    "firebase_url": "https://androidtalk-6ab3e.firebaseio.com",
+    "project_id": "androidtalk-6ab3e",
+    "storage_bucket": "androidtalk-6ab3e.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1006693360202:android:00692836cf333715cdbcb3",
+        "android_client_info": {
+          "package_name": "com.e.androidtalk"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1006693360202-jbbqgiun9pblq6dsej724hb35275v97k.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBZK2MsC7RFI8QtRVFyqFPcuP5HBBbYQnU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1006693360202-jbbqgiun9pblq6dsej724hb35275v97k.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
