@@ -33,6 +33,10 @@ public class User {
         return profileUrl;
     }
 
+    public boolean isSelection(){
+        return selection;
+    }
+
     public void setEmail(String email) {
         this.email = email;
     }

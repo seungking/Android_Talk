@@ -51,8 +51,7 @@ public class MainActivity extends AppCompatActivity {
                     mViewPager.setCurrentItem(2, true);
                     // 체크박스가 보일수 있도록 처리
                     FriendFragment friendFragment = (FriendFragment) mPageAdapter.getItem(1);
-//                    friendFragment.toggleSelectionMode();
-
+                    friendFragment.toggleSelectionMode();
                 }
             }
         });

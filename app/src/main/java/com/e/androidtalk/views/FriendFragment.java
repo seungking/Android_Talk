@@ -1,9 +1,11 @@
 package com.e.androidtalk.views;
 
+import android.content.Intent;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.view.LayoutInflater;
@@ -13,6 +15,8 @@ import android.widget.EditText;
 import android.widget.LinearLayout;
 
 import com.e.androidtalk.R;
+import com.e.androidtalk.adapters.FriendListAdapter;
+import com.e.androidtalk.customviews.RecyclerViewItemClickListener;
 import com.e.androidtalk.models.User;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.analytics.FirebaseAnalytics;
@@ -52,7 +56,7 @@ public class FriendFragment extends Fragment {
     private DatabaseReference mFriendsDBRef;
     private DatabaseReference mUserDBRef;
 
-//    private FriendListAdapter friendListAdapter;
+    private FriendListAdapter friendListAdapter;
 
     private FirebaseAnalytics mFirebaseAnalytics;
 
@@ -71,6 +75,46 @@ public class FriendFragment extends Fragment {
         mFriendsDBRef = mFirebaseDb.getReference("users").child(mFirebaseUser.getUid()).child("friends");
         mUserDBRef = mFirebaseDb.getReference("users");
 
+        // 1. 리얼타임데이터베이스에서 나의 친구목록을 리스터를 통하여 데이터를 가져옵니다.
+        addFriendListener();
+        // 2. 가져온 데이터를 통해서 recyclerview의 아답터에 아이템을 추가 시켜줍니다. (UI)갱신
+        friendListAdapter = new FriendListAdapter();
+        mRecyclerView.setAdapter(friendListAdapter);
+        mRecyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
+
+        // 3. 아이템별로 (친구) 클릭이벤트를 주어서 선택한 친구와 대화를 할 수 있도록 한다.
+        mRecyclerView.addOnItemTouchListener(new RecyclerViewItemClickListener(getContext(), new RecyclerViewItemClickListener.OnItemClickListener() {
+            @Override
+            public void onItemClick(View view, int position) {
+                final User friend = friendListAdapter.getItem(position);
+
+                if (friendListAdapter.getSelectionMode() == FriendListAdapter.UNSELECTION_MODE) {
+                    Snackbar.make(view, friend.getName()+"님과 대화를 하시겠습니까?", Snackbar.LENGTH_LONG).setAction("예", new View.OnClickListener() {
+                        @Override
+                        public void onClick(View view) {
+                            Intent chatIntent = new Intent(getActivity(), ChatActivity.class);
+                            chatIntent.putExtra("uid", friend.getUid());
+                            startActivity(chatIntent);
+//                            startActivityForResult(chatIntent, ChatFragment.JOIN_ROOM_REQUEST_CODE);
+                        }
+                    }).show();
+                } else {
+                    friend.setSelection(friend.isSelection() ? false : true);
+                    int selectedUserCount = friendListAdapter.getSelectionUsersCount();
+                    Snackbar.make(view, selectedUserCount+"명과 대화를 하시겠습니까?", Snackbar.LENGTH_LONG).setAction("예", new View.OnClickListener() {
+                        @Override
+                        public void onClick(View view) {
+                            Intent chatIntent = new Intent(getActivity(), ChatActivity.class);
+                            chatIntent.putExtra("uids", friendListAdapter.getSelectedUids());
+//                            startActivityForResult(chatIntent, ChatFragment.JOIN_ROOM_REQUEST_CODE);
+                            startActivity(chatIntent);
+                        }
+                    }).show();
+                }
+
+            }
+        }));
+
         return friendView;
     }
 
@@ -79,11 +123,11 @@ public class FriendFragment extends Fragment {
         mSearchArea.setVisibility( mSearchArea.getVisibility() == View.VISIBLE ? View.GONE : View.VISIBLE );
     }
 
-//    public void toggleSelectionMode(){
-//        friendListAdapter
-//                .setSelectionMode(friendListAdapter.getSelectionMode() == FriendListAdapter.SELECTION_MODE ? FriendListAdapter.UNSELECTION_MODE :
-//                        FriendListAdapter.SELECTION_MODE);
-//    }
+    public void toggleSelectionMode(){
+        friendListAdapter
+                .setSelectionMode(friendListAdapter.getSelectionMode() == FriendListAdapter.SELECTION_MODE ? FriendListAdapter.UNSELECTION_MODE :
+                        FriendListAdapter.SELECTION_MODE);
+    }
 
     @OnClick(R.id.findBtn)
     public void addFriend(){
@@ -195,7 +239,7 @@ public class FriendFragment extends Fragment {
             public void onChildAdded(DataSnapshot dataSnapshot, String s) {
                 User friend = dataSnapshot.getValue(User.class);
                 // 2. 가져온 데이터를 통해서 recyclerview의 아답터에 아이템을 추가 시켜줍니다. (UI)갱신
-//                drawUI(friend);
+                drawUI(friend);
             }
 
             @Override
@@ -220,8 +264,8 @@ public class FriendFragment extends Fragment {
         });
     }
 
-//    private void drawUI(User friend){
-//        friendListAdapter.addItem(friend);
-//
-//    }
+    private void drawUI(User friend){
+        friendListAdapter.addItem(friend);
+
+    }
 }
