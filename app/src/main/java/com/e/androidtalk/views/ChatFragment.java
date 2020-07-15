@@ -1,5 +1,7 @@
 package com.e.androidtalk.views;
 
+import android.app.Notification;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 
@@ -14,8 +16,10 @@ import android.view.ViewGroup;
 
 import com.e.androidtalk.R;
 import com.e.androidtalk.adapters.ChatListAdapter;
+import com.e.androidtalk.customviews.RecyclerViewItemClickListener;
 import com.e.androidtalk.models.Chat;
 import com.e.androidtalk.models.User;
+import com.google.firebase.analytics.FirebaseAnalytics;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.ChildEventListener;
@@ -47,6 +51,17 @@ public class ChatFragment extends Fragment {
 
     private ChatListAdapter mChatListAdapter;
 
+    public static String JOINED_ROOM = "";
+
+    public static final int JOIN_ROOM_REQUEST_CODE = 100;
+
+    private Notification mNotification;
+
+    private Context mContext;
+
+    private FirebaseAnalytics mFirebaseAnalytics;
+
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
@@ -62,6 +77,19 @@ public class ChatFragment extends Fragment {
         mChatListAdapter.setFragment(this);
         mChatRecyclerView.setAdapter(mChatListAdapter);
         mChatRecyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
+
+        mFirebaseAnalytics = FirebaseAnalytics.getInstance(getActivity());
+        mChatRecyclerView.addOnItemTouchListener( new RecyclerViewItemClickListener(getContext(), new RecyclerViewItemClickListener.OnItemClickListener() {
+            @Override
+            public void onItemClick(View view, int position) {
+                Chat chat = mChatListAdapter.getItem(position);
+                Intent chatIntent = new Intent(getActivity(), ChatActivity.class);
+                chatIntent.putExtra("chat_id", chat.getChatId());
+                startActivityForResult(chatIntent, JOIN_ROOM_REQUEST_CODE);
+            }
+        }));
+        mContext = getActivity();
+//        mNotification = new Notification(mContext);
 
         addChatListener();
         return chatView;

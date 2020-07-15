@@ -9,20 +9,27 @@ import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageView;
-import android.widget.Toolbar;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.e.androidtalk.R;
+import com.e.androidtalk.adapters.MessageListAdapter;
 import com.e.androidtalk.models.Chat;
 import com.e.androidtalk.models.Message;
+import com.e.androidtalk.models.PhotoMessage;
 import com.e.androidtalk.models.TextMessage;
 import com.e.androidtalk.models.User;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.analytics.FirebaseAnalytics;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -30,7 +37,9 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.MutableData;
 import com.google.firebase.database.Transaction;
 import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
+import com.google.firebase.storage.UploadTask;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -52,12 +61,12 @@ public class ChatActivity extends AppCompatActivity {
     @BindView(R.id.edtContent)
     EditText mMessageText;
 
-//    @BindView(R.id.toolbar)
-//    Toolbar mToolbar;
+    @BindView(R.id.toolbar)
+    Toolbar mToolbar;
 
     @BindView(R.id.chat_rec_view)
     RecyclerView mChatRecyclerView;
-//    private MessageListAdapter messageListAdapter;
+    private MessageListAdapter messageListAdapter;
     private FirebaseDatabase mFirebaseDb;
     private DatabaseReference mChatRef;
     private DatabaseReference mChatMemeberRef;
@@ -84,17 +93,115 @@ public class ChatActivity extends AppCompatActivity {
             mChatMessageRef = mFirebaseDb.getReference("chat_messages").child(mChatId);
             mChatMemeberRef = mFirebaseDb.getReference("chat_members").child(mChatId);
 //            ChatFragment.JOINED_ROOM = mChatId;
-//            initTotalunreadCount();
+            initTotalunreadCount();
         } else {
             Log.d("log1","mchatid is null");
             mChatRef = mFirebaseDb.getReference("users").child(mFirebaseUser.getUid()).child("chats");
         }
-//        messageListAdapter = new MessageListAdapter();
-//        mChatRecyclerView.setLayoutManager(new LinearLayoutManager(this));
-//        mChatRecyclerView.setAdapter(messageListAdapter);
+        messageListAdapter = new MessageListAdapter();
+        mChatRecyclerView.setLayoutManager(new LinearLayoutManager(this));
+        mChatRecyclerView.setAdapter(messageListAdapter);
 //        mFirebaseAnalytics = FirebaseAnalytics.getInstance(this);
     }
 
+    private void initTotalunreadCount(){
+        mChatRef.child("totalUnreadCount").setValue(0);
+    }
+
+//    MessageEventListener mMessageEventListener = new MessageEventListener();
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        if (mChatId != null) {
+//            removeMessageListener();
+        }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (mChatId != null) {
+
+            // 총 메세지의 카운터를 가져온다.
+            // onchildadded 호출한 변수의 값이 총메세지의 값과 크거나 같다면, 포커스를 맨아래로 내려줍니다.
+            mChatMessageRef.addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(DataSnapshot dataSnapshot) {
+                    long totalMessageCount =  dataSnapshot.getChildrenCount();
+//                    mMessageEventListener.setTotalMessageCount(totalMessageCount);
+                }
+
+                @Override
+                public void onCancelled(DatabaseError databaseError) {
+
+                }
+            });
+            messageListAdapter.clearItem();
+            addChatListener();
+            addMessageListener();
+        }
+    }
+
+    private void addChatListener(){
+        mChatRef.child("title").addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                String title = dataSnapshot.getValue(String.class);
+                if ( title != null ) {
+                    mToolbar.setTitle(title);
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
+    }
+
+    private void addMessageListener(){
+        mChatMessageRef.addChildEventListener(new ChildEventListener() {
+            @Override
+            public void onChildAdded(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
+
+
+                //여기 임의로 추가함 나중에 바꾸기
+                ///////////////////////////////////////
+                Message item = snapshot.getValue(Message.class);
+
+                if(item.getMessageType()==Message.MessageType.TEXT){
+                    TextMessage textMessage = snapshot.getValue(TextMessage.class);
+                    messageListAdapter.addItem(item);
+                }
+                else {
+                    PhotoMessage photoMessage = snapshot.getValue(PhotoMessage.class);
+                    messageListAdapter.addItem(item);
+                }
+            }
+
+            @Override
+            public void onChildChanged(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
+
+            }
+
+            @Override
+            public void onChildRemoved(@NonNull DataSnapshot snapshot) {
+
+            }
+
+            @Override
+            public void onChildMoved(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
+
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+
+            }
+        });
+//        mChatMessageRef.addChildEventListener(mMessageEventListener);
+    }
 
     @OnClick(R.id.senderBtn)
     public void onSendEvent(View v){
@@ -134,27 +241,27 @@ public class ChatActivity extends AppCompatActivity {
 //        }
 //    }
 //
-//    private String mPhotoUrl = null;
-//    private Message.MessageType mMessageType = Message.MessageType.TEXT;
-//
-//    private void uploadImage(Uri data){
-//        if ( mImageStorageRef == null ) {
-//            mImageStorageRef = FirebaseStorage.getInstance().getReference("/chats/").child(mChatId);
-//        }
-//        mImageStorageRef.putFile(data).addOnCompleteListener(new OnCompleteListener<UploadTask.TaskSnapshot>() {
-//            @Override
-//            public void onComplete(@NonNull Task<UploadTask.TaskSnapshot> task) {
-//                if ( task.isSuccessful() ) {
+    private String mPhotoUrl = null;
+    private Message.MessageType mMessageType = Message.MessageType.TEXT;
+
+    private void uploadImage(Uri data){
+        if ( mImageStorageRef == null ) {
+            mImageStorageRef = FirebaseStorage.getInstance().getReference("/chats/").child(mChatId);
+        }
+        mImageStorageRef.putFile(data).addOnCompleteListener(new OnCompleteListener<UploadTask.TaskSnapshot>() {
+            @Override
+            public void onComplete(@NonNull Task<UploadTask.TaskSnapshot> task) {
+                if ( task.isSuccessful() ) {
 //                    mPhotoUrl = task.getResult().getDownloadUrl().toString();
 //                    mMessageType = Message.MessageType.PHOTO;
 //                    sendMessage();
-//                }
-//            }
-//        });
-//        //firebase Storage
-//    }
-//
-//
+                }
+            }
+        });
+        //firebase Storage
+    }
+
+
     private Message message = new Message();
     private void sendMessage(){
 //        // 메세지 키 생성
@@ -163,23 +270,23 @@ public class ChatActivity extends AppCompatActivity {
         String messageId = mChatMessageRef.push().getKey();
         String messageText = mMessageText.getText().toString();
 //
-//        final Bundle bundle = new Bundle();
-//        bundle.putString("me", mFirebaseUser.getEmail());
-//        bundle.putString("roomId", mChatId);
+        final Bundle bundle = new Bundle();
+        bundle.putString("me", mFirebaseUser.getEmail());
+        bundle.putString("roomId", mChatId);
 //
-//        if ( mMessageType == Message.MessageType.TEXT ) {
+        if ( mMessageType == Message.MessageType.TEXT ) {
             if ( messageText.isEmpty()) {
                 return;
             }
             message = new TextMessage();
             ((TextMessage)message).setMessageText(messageText.trim());
-//            bundle.putString("messageType", Message.MessageType.TEXT.toString());
-//        } else if ( mMessageType == Message.MessageType.PHOTO ){
-//            message = new PhotoMessage();
-//            ((PhotoMessage)message).setPhotoUrl(mPhotoUrl);
-//            bundle.putString("messageType", Message.MessageType.PHOTO.toString());
-//        }
-//
+            bundle.putString("messageType", Message.MessageType.TEXT.toString());
+        } else if ( mMessageType == Message.MessageType.PHOTO ){
+            message = new PhotoMessage();
+            ((PhotoMessage)message).setPhotoUrl(mPhotoUrl);
+            bundle.putString("messageType", Message.MessageType.PHOTO.toString());
+        }
+
         message.setMessageDate(new Date());
         message.setChatId(mChatId);
         message.setMessageId(messageId);
@@ -193,7 +300,7 @@ public class ChatActivity extends AppCompatActivity {
             message.setUnreadCount(uids.length-1);
         }
         mMessageText.setText("");
-//        mMessageType = Message.MessageType.TEXT;
+        mMessageType = Message.MessageType.TEXT;
         mChatMemeberRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(final DataSnapshot dataSnapshot) {

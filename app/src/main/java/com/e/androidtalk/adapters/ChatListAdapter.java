@@ -92,39 +92,39 @@ public class ChatListAdapter extends RecyclerView.Adapter<ChatListAdapter.ChatHo
         holder.lastMessageDateView.setText(sdf.format(item.getCreateDate()));
         if(item.getTotalUnreadCount()>0)
         holder.totalUnreadCountView.setText(String.valueOf(item.getTotalUnreadCount()));
-//        // chatThumbnailView
-//        if ( item.getLastMessage() != null ) {
-//
-//            if ( item.getLastMessage().getMessageType() == Message.MessageType.TEXT) {
-//                holder.lastMessageView.setText(item.getLastMessage().getMessageText());
-//            } else if (item.getLastMessage().getMessageType() == Message.MessageType.PHOTO) {
-//                holder.lastMessageView.setText("(사진)");
-//            } else if (item.getLastMessage().getMessageType() == Message.MessageType.EXIT ) {
-//                holder.lastMessageView.setText(String.format("%s님이 방에서 나가셨습니다.", item.getLastMessage().getMessageUser().getName()));
-//            }
-//
-//            holder.lastMessageDateView.setText(sdf.format(item.getLastMessage().getMessageDate()));
-//        }
-//
-//
-//        holder.titleView.setText(item.getTitle());
-//        holder.rootView.setOnLongClickListener(new View.OnLongClickListener() {
-//            @Override
-//            public boolean onLongClick(View view) {
-//                if ( mChatFragment != null ) {
-//                    mChatFragment.leaveChat(item);
-//                }
-//                return true;
-//            }
-//        });
-//
-//        if (item.getTotalUnreadCount() > 0 ){
-//            holder.totalUnreadCountView.setText(String.valueOf(item.getTotalUnreadCount()));
-//            holder.totalUnreadCountView.setVisibility(View.VISIBLE);
-//        } else {
-//            holder.totalUnreadCountView.setVisibility(View.GONE);
-//            holder.totalUnreadCountView.setText("");
-//        }
+        // chatThumbnailView
+        if ( item.getLastMessage() != null ) {
+
+            if ( item.getLastMessage().getMessageType() == Message.MessageType.TEXT) {
+                holder.lastMessageView.setText(item.getLastMessage().getMessageText());
+            } else if (item.getLastMessage().getMessageType() == Message.MessageType.PHOTO) {
+                holder.lastMessageView.setText("(사진)");
+            } else if (item.getLastMessage().getMessageType() == Message.MessageType.EXIT ) {
+                holder.lastMessageView.setText(String.format("%s님이 방에서 나가셨습니다.", item.getLastMessage().getMessageUser().getName()));
+            }
+
+            holder.lastMessageDateView.setText(sdf.format(item.getLastMessage().getMessageDate()));
+        }
+
+
+        holder.titleView.setText(item.getTitle());
+        holder.rootView.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View view) {
+                if ( mChatFragment != null ) {
+                    mChatFragment.leaveChat(item);
+                }
+                return true;
+            }
+        });
+
+        if (item.getTotalUnreadCount() > 0 ){
+            holder.totalUnreadCountView.setText(String.valueOf(item.getTotalUnreadCount()));
+            holder.totalUnreadCountView.setVisibility(View.VISIBLE);
+        } else {
+            holder.totalUnreadCountView.setVisibility(View.GONE);
+            holder.totalUnreadCountView.setText("");
+        }
     }
 
     @Override
