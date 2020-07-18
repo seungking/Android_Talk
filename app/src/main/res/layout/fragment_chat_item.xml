@@ -30,14 +30,14 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:ellipsize="end"
-                    android:text="123123123"
+                    android:text="Title"
                     android:textStyle="bold"
                     android:textSize="15dp"/>
 
             <TextView
                     android:id="@+id/lastmessage"
                     android:layout_marginTop="2dp"
-                    android:text="123123123"
+                    android:text="LastMessage"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:maxLines="2"

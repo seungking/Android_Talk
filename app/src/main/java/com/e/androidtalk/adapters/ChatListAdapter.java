@@ -86,7 +86,7 @@ public class ChatListAdapter extends RecyclerView.Adapter<ChatListAdapter.ChatHo
 
         final Chat item = getItem(position);
 
-//        holder.lastMessageDateView.setText(item.getLastMessage().getMessageText());
+        holder.lastMessageDateView.setText(item.getLastMessage().getMessageText());
         holder.lastMessageDateView.setText("aa");
         holder.titleView.setText(item.getTitle());
         holder.lastMessageDateView.setText(sdf.format(item.getCreateDate()));

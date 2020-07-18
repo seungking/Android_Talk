@@ -169,7 +169,7 @@ public class ChatFragment extends Fragment {
 
         final Chat chatRoom = chatDataSnapshot.getValue(Chat.class);
         Log.d("log1","111");
-        mChatListAdapter.addItem(chatRoom);
+//        mChatListAdapter.addItem(chatRoom);
         mChatMemberRef.child(chatRoom.getChatId()).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
