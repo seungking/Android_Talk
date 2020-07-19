@@ -46,6 +46,8 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -129,7 +131,7 @@ public class ChatActivity extends AppCompatActivity {
                 @Override
                 public void onDataChange(DataSnapshot dataSnapshot) {
                     long totalMessageCount =  dataSnapshot.getChildrenCount();
-//                    mMessageEventListener.setTotalMessageCount(totalMessageCount);
+                    mMessageEventListener.setTotalMessageCount(totalMessageCount);
                 }
 
                 @Override
@@ -221,7 +223,14 @@ public class ChatActivity extends AppCompatActivity {
 
                         @Override
                         public void onComplete(@Nullable DatabaseError error, boolean committed, @Nullable DataSnapshot currentData) {
-                            initTotalunreadCount();
+                            //0.5 초 정도 후에 언리드카운트의 값을 초기화.
+                            // Timer // TimeTask
+                            new Timer().schedule(new TimerTask() {
+                                @Override
+                                public void run() {
+                                    initTotalunreadCount();
+                                }
+                            }, 500);
                         }
                     });
                 }
@@ -364,8 +373,8 @@ public class ChatActivity extends AppCompatActivity {
         message.setMessageDate(new Date());
         message.setChatId(mChatId);
         message.setMessageId(messageId);
-//        message.setMessageType(mMessageType);
-        message.setMessageType(Message.MessageType.TEXT);
+        message.setMessageType(mMessageType);
+//        message.setMessageType(Message.MessageType.TEXT);
         message.setMessageUser(new User(mFirebaseUser.getUid(), mFirebaseUser.getEmail(), mFirebaseUser.getDisplayName(), mFirebaseUser.getPhotoUrl().toString()));
         message.setReadUserList(Arrays.asList(new String[]{mFirebaseUser.getUid()}));
 //

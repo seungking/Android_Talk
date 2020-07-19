@@ -18,6 +18,7 @@ import com.e.androidtalk.R;
 import com.e.androidtalk.adapters.ChatListAdapter;
 import com.e.androidtalk.customviews.RecyclerViewItemClickListener;
 import com.e.androidtalk.models.Chat;
+import com.e.androidtalk.models.Message;
 import com.e.androidtalk.models.User;
 import com.google.firebase.analytics.FirebaseAnalytics;
 import com.google.firebase.auth.FirebaseAuth;
@@ -118,31 +119,31 @@ public class ChatFragment extends Fragment {
                 // ui 갱신 시켜주는 메서드로 방의 정보를 전달.
                 // totalunread의 변경, title의 변경, lastmessage변경시에 호출이 됩니다.
                 // 방에 대한 정보를 얻어오고
-//                drawUI(chatDataSnapshot, DrawType.UPDATE);
-//                final Chat updatedChat = chatDataSnapshot.getValue(Chat.class);
-//
-//                if (updatedChat.getLastMessage() != null ) {
-//                    if ( updatedChat.getLastMessage().getMessageType() == Message.MessageType.EXIT ) {
-//                        return;
-//                    }
-//                    if ( !updatedChat.getLastMessage().getMessageUser().getUid().equals(mFirebaseUser.getUid())) {
-//                        if ( !updatedChat.getChatId().equals(JOINED_ROOM)) {
-//                            // 노티피케이션 알림
-//                            Intent chatIntent = new Intent(mContext, ChatActivity.class);
-//                            chatIntent.putExtra("chat_id", updatedChat.getChatId());
+                drawUI(chatDataSnapshot, DrawType.UPDATE);
+                final Chat updatedChat = chatDataSnapshot.getValue(Chat.class);
+
+                if (updatedChat.getLastMessage() != null ) {
+                    if ( updatedChat.getLastMessage().getMessageType() == Message.MessageType.EXIT ) {
+                        return;
+                    }
+                    if ( !updatedChat.getLastMessage().getMessageUser().getUid().equals(mFirebaseUser.getUid())) {
+                        if ( !updatedChat.getChatId().equals(JOINED_ROOM)) {
+                            // 노티피케이션 알림
+                            Intent chatIntent = new Intent(mContext, ChatActivity.class);
+                            chatIntent.putExtra("chat_id", updatedChat.getChatId());
 //                            mNotification
 //                                    .setData(chatIntent)
 //                                    .setTitle(updatedChat.getLastMessage().getMessageUser().getName())
 //                                    .setText(updatedChat.getLastMessage().getMessageText())
 //                                    .notification();
-//
-//                            Bundle bundle = new Bundle();
-//                            bundle.putString("friend", updatedChat.getLastMessage().getMessageUser().getEmail());
-//                            bundle.putString("me", mFirebaseUser.getEmail());
-//                            mFirebaseAnalytics.logEvent("notification", bundle);
-//                        }
-//                    }
-//                }
+
+                            Bundle bundle = new Bundle();
+                            bundle.putString("friend", updatedChat.getLastMessage().getMessageUser().getEmail());
+                            bundle.putString("me", mFirebaseUser.getEmail());
+                            mFirebaseAnalytics.logEvent("notification", bundle);
+                        }
+                    }
+                }
 
             }
 
