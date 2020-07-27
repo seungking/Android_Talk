@@ -25,6 +25,7 @@ import com.e.androidtalk.models.PhotoMessage;
 import com.e.androidtalk.models.TextMessage;
 import com.e.androidtalk.models.User;
 import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.analytics.FirebaseAnalytics;
 import com.google.firebase.auth.FirebaseAuth;
@@ -94,7 +95,7 @@ public class ChatActivity extends AppCompatActivity {
             mChatRef = mFirebaseDb.getReference("users").child(mFirebaseUser.getUid()).child("chats").child(mChatId);
             mChatMessageRef = mFirebaseDb.getReference("chat_messages").child(mChatId);
             mChatMemeberRef = mFirebaseDb.getReference("chat_members").child(mChatId);
-//            ChatFragment.JOINED_ROOM = mChatId;
+            ChatFragment.JOINED_ROOM = mChatId;
             initTotalunreadCount();
         } else {
             Log.d("log1","mchatid is null");
@@ -146,6 +147,7 @@ public class ChatActivity extends AppCompatActivity {
     }
 
     private void addChatListener(){
+        //Single 에서 Value 이벤트로 바꿔서 계속 실행되도록
         mChatRef.child("title").addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
@@ -243,14 +245,22 @@ public class ChatActivity extends AppCompatActivity {
             // chat_messages > {chat_id} > {message_id} >  unreadCount -= 1
             // readUserList에 내 uid 추가
 
-            if(item.getMessageType()==Message.MessageType.TEXT){
+            // ui
+            if ( item.getMessageType() == Message.MessageType.TEXT ) {
                 TextMessage textMessage = snapshot.getValue(TextMessage.class);
                 messageListAdapter.addItem(textMessage);
-            }
-            else {
+            } else if ( item.getMessageType() == Message.MessageType.PHOTO ){
                 PhotoMessage photoMessage = snapshot.getValue(PhotoMessage.class);
                 messageListAdapter.addItem(photoMessage);
+            } else if ( item.getMessageType() == Message.MessageType.EXIT ){
+                messageListAdapter.addItem(item);
             }
+
+            if ( callCount >= totalMessageCount) {
+                // 스크롤을 맨 마지막으로 내린다.
+                mChatRecyclerView.scrollToPosition(messageListAdapter.getItemCount() - 1);
+            }
+            callCount++;
         }
 
         @Override
@@ -304,25 +314,26 @@ public class ChatActivity extends AppCompatActivity {
         Intent intent = new Intent();
         intent.setAction(Intent.ACTION_GET_CONTENT);
         intent.setType("image/*");
-//        startActivityForResult(intent, TAKE_PHOTO_REQUEST_CODE);
+        startActivityForResult(intent, TAKE_PHOTO_REQUEST_CODE);
     }
 
-//    @Override
-//    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-//        super.onActivityResult(requestCode, resultCode, data);
-//
-//        if ( requestCode == TAKE_PHOTO_REQUEST_CODE ) {
-//            if ( data != null ) {
-//
-//                // 업로드 이미지를 처리 합니다.
-//                // 이미지 업로드가 완료된 경우
-//                // 실제 web 에 업로드 된 주소를 받아서 photoUrl로 저장
-//                // 그다음 포토메세지 발송
-//                uploadImage(data.getData());
-//
-//            }
-//        }
-//    }
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if ( requestCode == TAKE_PHOTO_REQUEST_CODE ) {
+            if ( data != null ) {
+
+                // 업로드 이미지를 처리 합니다.
+                // 이미지 업로드가 완료된 경우
+                // 실제 web 에 업로드 된 주소를 받아서 photoUrl로 저장
+                // 그다음 포토메세지 발송
+                Log.d("log1","requset image");
+                uploadImage(data.getData());
+
+            }
+        }
+    }
 //
     private String mPhotoUrl = null;
     private Message.MessageType mMessageType = Message.MessageType.TEXT;
@@ -331,14 +342,26 @@ public class ChatActivity extends AppCompatActivity {
         if ( mImageStorageRef == null ) {
             mImageStorageRef = FirebaseStorage.getInstance().getReference("/chats/").child(mChatId);
         }
+        Log.d("log1","uploadimage");
         mImageStorageRef.putFile(data).addOnCompleteListener(new OnCompleteListener<UploadTask.TaskSnapshot>() {
             @Override
             public void onComplete(@NonNull Task<UploadTask.TaskSnapshot> task) {
+               Log.d("log1","photo complete");
                 if ( task.isSuccessful() ) {
-//                    mPhotoUrl = task.getResult().getDownloadUrl().toString();
-//                    mMessageType = Message.MessageType.PHOTO;
-//                    sendMessage();
+                    mPhotoUrl = task.getResult().getUploadSessionUri().toString();
+                    mMessageType = Message.MessageType.PHOTO;
+                    sendMessage();
                 }
+            }
+        });
+
+        mImageStorageRef.putFile(data).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+            @Override
+            public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                mPhotoUrl = taskSnapshot.getUploadSessionUri().toString();
+                Log.d("log1","photosuccess : " + mPhotoUrl);
+                mMessageType = Message.MessageType.PHOTO;
+                sendMessage();
             }
         });
         //firebase Storage
@@ -348,6 +371,7 @@ public class ChatActivity extends AppCompatActivity {
     private Message message = new Message();
     private void sendMessage(){
 //        // 메세지 키 생성
+        Log.d("log1","sendmessage");
         mChatMessageRef = mFirebaseDb.getReference("chat_messages").child(mChatId);
 //        // chat_message>{chat_id}>{message_id} > messageInfo
         String messageId = mChatMessageRef.push().getKey();
@@ -485,15 +509,15 @@ public class ChatActivity extends AppCompatActivity {
                                     dataSnapshot.getRef().child("chats").child(mChatId).setValue(chat);
                                     if ( !isSentMessage ) {
                                         sendMessage();
-//                                        addChatListener();
-//                                        addMessageListener();
+                                        addChatListener();
+                                        addMessageListener();
                                         isSentMessage = true;
 //
-//                                        Bundle bundle = new Bundle();
-//                                        bundle.putString("me", mFirebaseUser.getEmail());
-//                                        bundle.putString("roomId", mChatId);
-//                                        mFirebaseAnalytics.logEvent("createChat", bundle);
-//                                        ChatFragment.JOINED_ROOM = mChatId;
+                                        Bundle bundle = new Bundle();
+                                        bundle.putString("me", mFirebaseUser.getEmail());
+                                        bundle.putString("roomId", mChatId);
+                                        mFirebaseAnalytics.logEvent("createChat", bundle);
+                                        ChatFragment.JOINED_ROOM = mChatId;
 
                                     }
 

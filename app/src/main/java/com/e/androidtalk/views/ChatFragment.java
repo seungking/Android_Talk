@@ -1,6 +1,5 @@
 package com.e.androidtalk.views;
 
-import android.app.Notification;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
@@ -18,8 +17,11 @@ import com.e.androidtalk.R;
 import com.e.androidtalk.adapters.ChatListAdapter;
 import com.e.androidtalk.customviews.RecyclerViewItemClickListener;
 import com.e.androidtalk.models.Chat;
+import com.e.androidtalk.models.ExitMessage;
 import com.e.androidtalk.models.Message;
+import com.e.androidtalk.models.Notification;
 import com.e.androidtalk.models.User;
+import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.analytics.FirebaseAnalytics;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -90,7 +92,7 @@ public class ChatFragment extends Fragment {
             }
         }));
         mContext = getActivity();
-//        mNotification = new Notification(mContext);
+        mNotification = new Notification(mContext);
 
         addChatListener();
         return chatView;
@@ -119,6 +121,7 @@ public class ChatFragment extends Fragment {
                 // ui 갱신 시켜주는 메서드로 방의 정보를 전달.
                 // totalunread의 변경, title의 변경, lastmessage변경시에 호출이 됩니다.
                 // 방에 대한 정보를 얻어오고
+                Log.d("log1", "1");
                 drawUI(chatDataSnapshot, DrawType.UPDATE);
                 final Chat updatedChat = chatDataSnapshot.getValue(Chat.class);
 
@@ -127,16 +130,18 @@ public class ChatFragment extends Fragment {
                         return;
                     }
                     if ( !updatedChat.getLastMessage().getMessageUser().getUid().equals(mFirebaseUser.getUid())) {
+                        Log.d("log1", "2");
                         if ( !updatedChat.getChatId().equals(JOINED_ROOM)) {
                             // 노티피케이션 알림
+                            Log.d("log1", "3");
                             Intent chatIntent = new Intent(mContext, ChatActivity.class);
                             chatIntent.putExtra("chat_id", updatedChat.getChatId());
-//                            mNotification
-//                                    .setData(chatIntent)
-//                                    .setTitle(updatedChat.getLastMessage().getMessageUser().getName())
-//                                    .setText(updatedChat.getLastMessage().getMessageText())
-//                                    .notification();
-
+                            mNotification
+                                    .setData(chatIntent)
+                                    .setTitle(updatedChat.getLastMessage().getMessageUser().getName())
+                                    .setText(updatedChat.getLastMessage().getMessageText())
+                                    .notification();
+                            Log.d("log1", "4");
                             Bundle bundle = new Bundle();
                             bundle.putString("friend", updatedChat.getLastMessage().getMessageUser().getEmail());
                             bundle.putString("me", mFirebaseUser.getEmail());
@@ -178,22 +183,22 @@ public class ChatFragment extends Fragment {
                 Iterator<DataSnapshot> memberIterator = dataSnapshot.getChildren().iterator();
                 StringBuffer memberStringBuffer = new StringBuffer();
 //
-//                /**
-//                 *  <추가 반영분>
-//                 *  방에 한명밖에 없는 경우 방을 사용하지 못하게 처리 합니다.
-//                 **/
-//                if ( memberCount <= 1 ) {
-//                    chatRoom.setTitle("대화상대가 없는 방입니다.");
-//                    chatDataSnapshot.getRef().child("title").setValue(chatRoom.getTitle());
-//                    chatDataSnapshot.getRef().child("disabled").setValue(true);
-//                    if ( drawType == DrawType.ADD) {
-//                        mChatListAdapter.addItem(chatRoom);
-//                    } else {
-//                        mChatListAdapter.updateItem(chatRoom);
-//                    }
-//                    return;
-//                }
-//
+                /**
+                 *  <추가 반영분>
+                 *  방에 한명밖에 없는 경우 방을 사용하지 못하게 처리 합니다.
+                 **/
+                if ( memberCount <= 1 ) {
+                    chatRoom.setTitle("대화상대가 없는 방입니다.");
+                    chatDataSnapshot.getRef().child("title").setValue(chatRoom.getTitle());
+                    chatDataSnapshot.getRef().child("disabled").setValue(true);
+                    if ( drawType == DrawType.ADD) {
+                        mChatListAdapter.addItem(chatRoom);
+                    } else {
+                        mChatListAdapter.updateItem(chatRoom);
+                    }
+                    return;
+                }
+
                 int loopCount = 1;
                 while( memberIterator.hasNext()) {
                     User member = memberIterator.next().getValue(User.class);
@@ -230,148 +235,148 @@ public class ChatFragment extends Fragment {
     }
 //
     public void leaveChat(final Chat chat) {
-//        final DatabaseReference messageRef = mFirebaseDatase.getReference("chat_messages").child(chat.getChatId());
-//        Snackbar.make(getView(), "선택된 대화방을 나가시겠습니까?", Snackbar.LENGTH_LONG).setAction("예", new View.OnClickListener() {
-//            @Override
-//            public void onClick(View view) {
-//                // 나의 대화방 목록에서 제거
-//                // users/{uid}/chats
-//                mChatRef.child(chat.getChatId()).removeValue(new DatabaseReference.CompletionListener() {
-//                    @Override
-//                    public void onComplete(DatabaseError databaseError, DatabaseReference chatRef) {
-//
-//                        //exit 메세지 발송
-//                        // chat_messages > {chat_id} > {message_id} >  { - 내용...~}
-//
-//                        final ExitMessage exitMessage = new ExitMessage();
-//                        String messageId = messageRef.push().getKey();
-//
-//                        exitMessage.setMessageUser(new User(mFirebaseUser.getUid(), mFirebaseUser.getEmail(), mFirebaseUser.getDisplayName(), mFirebaseUser.getPhotoUrl().toString()));
-//                        exitMessage.setMessageDate(new Date());
-//                        exitMessage.setMessageId(messageId);
-//                        exitMessage.setChatId(chat.getChatId());
-//                        messageRef.child(messageId).setValue(exitMessage);
-//
-//                        // 채팅 멤버 목록에서 제거
-//                        // chat_members/{chat_id}/{user_id} 제거
-//                        mChatMemberRef
-//                                .child(chat.getChatId())
-//                                .child(mFirebaseUser.getUid())
-//                                .removeValue(new DatabaseReference.CompletionListener() {
-//                                    @Override
-//                                    public void onComplete(DatabaseError databaseError, DatabaseReference databaseReference) {
-//                                        // 메세지 unreadCount에서도 제거
-//                                        // getReadUserList 내가 있다면 읽어진거니깐 pass
-//                                        // 없다면 unreadCount - 1
-//                                        // messages/{chat_id}
-//                                        // 모든 메세지를 가져온다.
-//                                        // 가져와서 루프를 통해서 내가 읽었는지 여부 판단.
-//
-//                                        Bundle bundle = new Bundle();
-//                                        bundle.putString("me", mFirebaseUser.getEmail());
-//                                        bundle.putString("chatId", chat.getChatId());
-//
-//                                        mFirebaseAnalytics.logEvent("leaveChat", bundle);
-//
-//                                        // 채팅방의 멤버정보를 받아와서
-//                                        // 채팅방의 정보를 가져오고 (각각)
-//                                        // 그정보의 라스트 메세지를 수정해줍니다.
-//
-//                                        mChatMemberRef
-//                                                .child(chat.getChatId())
-//                                                .addListenerForSingleValueEvent(new ValueEventListener() {
-//                                                    @Override
-//                                                    public void onDataChange(DataSnapshot dataSnapshot) {
-//                                                        Iterator<DataSnapshot> chatMemberIterator = dataSnapshot.getChildren().iterator();
-//
-//                                                        while ( chatMemberIterator.hasNext()) {
-//                                                            User chatMember = chatMemberIterator.next().getValue(User.class);
-//
-//                                                            // chats -> {uid} -> {chat_id} - { ... }
-//                                                            mFirebaseDatase
-//                                                                    .getReference("users")
-//                                                                    .child(chatMember.getUid())
-//                                                                    .child("chats")
-//                                                                    .child(chat.getChatId())
-//                                                                    .child("lastMessage")
-//                                                                    .setValue(exitMessage);
-//                                                        }
-//                                                    }
-//
-//                                                    @Override
-//                                                    public void onCancelled(DatabaseError databaseError) {
-//
-//                                                    }
-//                                                });
-//
-//
-//
-//
-//                                        mFirebaseDatase.getReference("messages").child(chat.getChatId()).addListenerForSingleValueEvent(new ValueEventListener() {
-//                                            @Override
-//                                            public void onDataChange(DataSnapshot dataSnapshot) {
-//                                                Iterator<DataSnapshot> messageIterator = dataSnapshot.getChildren().iterator();
-//
-//                                                while ( messageIterator.hasNext()) {
-//                                                    DataSnapshot messageSnapshot = messageIterator.next();
-//                                                    Message currentMessage = messageSnapshot.getValue(Message.class);
-//                                                    if ( !currentMessage.getReadUserList().contains(mFirebaseUser.getUid())) {
-//                                                        // message
-//                                                        messageSnapshot.child("unreadCount").getRef().setValue(currentMessage.getUnreadCount() - 1);
-//                                                    }
-//                                                }
-//                                            }
-//
-//                                            @Override
-//                                            public void onCancelled(DatabaseError databaseError) {
-//
-//                                            }
-//                                        });
-//                                    }
-//                                });
-//
-//                        /**
-//                         * <추가 반영분>
-//                         * 대화방의 타이틀이 변경됨을 알려주어 채팅방의 리스너가 감지하게 하여 방 이름을 업데이트 하게 해야합니다
-//                         * 방의 제목은 방의 업데이트, 추가되었을때의 리스너가 처리하기때문에 방 제목만 변경 시켜서 변경이 되었음만 알리면 됩니다
-//                         */
-//                        mChatMemberRef.child(chat.getChatId()).addListenerForSingleValueEvent(new ValueEventListener() {
-//                            @Override
-//                            public void onDataChange(DataSnapshot dataSnapshot) {
-//                                Iterator<DataSnapshot> memberIterator = dataSnapshot.getChildren().iterator();
-//
-//                                while( memberIterator.hasNext()) {
-//                                    // 방 참여자의 UID를 가져오기 위하여 user 정보 조회
-//                                    User chatMember = memberIterator.next().getValue(User.class);
-//                                    // 해당 참여자의 방 정보의 업데이트를 위하여 방이름을 임의로 업데이트 진행
-//                                    mFirebaseDatase.getReference("users")
-//                                            .child(chatMember.getUid())
-//                                            .child("chats")
-//                                            .child(chat.getChatId())
-//                                            .child("title")
-//                                            .setValue("");
-//                                }
-//                            }
-//
-//                            @Override
-//                            public void onCancelled(DatabaseError databaseError) {
-//
-//                            }
-//                        });
-//                    }
-//                });
-//            }
-//        }).show();
+        final DatabaseReference messageRef = mFirebaseDatase.getReference("chat_messages").child(chat.getChatId());
+        Snackbar.make(getView(), "선택된 대화방을 나가시겠습니까?", Snackbar.LENGTH_LONG).setAction("예", new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                // 나의 대화방 목록에서 제거
+                // users/{uid}/chats
+                mChatRef.child(chat.getChatId()).removeValue(new DatabaseReference.CompletionListener() {
+                    @Override
+                    public void onComplete(DatabaseError databaseError, DatabaseReference chatRef) {
+
+                        //exit 메세지 발송
+                        // chat_messages > {chat_id} > {message_id} >  { - 내용...~}
+
+                        final ExitMessage exitMessage = new ExitMessage();
+                        String messageId = messageRef.push().getKey();
+
+                        exitMessage.setMessageUser(new User(mFirebaseUser.getUid(), mFirebaseUser.getEmail(), mFirebaseUser.getDisplayName(), mFirebaseUser.getPhotoUrl().toString()));
+                        exitMessage.setMessageDate(new Date());
+                        exitMessage.setMessageId(messageId);
+                        exitMessage.setChatId(chat.getChatId());
+                        messageRef.child(messageId).setValue(exitMessage);
+
+                        // 채팅 멤버 목록에서 제거
+                        // chat_members/{chat_id}/{user_id} 제거
+                        mChatMemberRef
+                                .child(chat.getChatId())
+                                .child(mFirebaseUser.getUid())
+                                .removeValue(new DatabaseReference.CompletionListener() {
+                                    @Override
+                                    public void onComplete(DatabaseError databaseError, DatabaseReference databaseReference) {
+                                        // 메세지 unreadCount에서도 제거
+                                        // getReadUserList 내가 있다면 읽어진거니깐 pass
+                                        // 없다면 unreadCount - 1
+                                        // messages/{chat_id}
+                                        // 모든 메세지를 가져온다.
+                                        // 가져와서 루프를 통해서 내가 읽었는지 여부 판단.
+
+                                        Bundle bundle = new Bundle();
+                                        bundle.putString("me", mFirebaseUser.getEmail());
+                                        bundle.putString("chatId", chat.getChatId());
+
+                                        mFirebaseAnalytics.logEvent("leaveChat", bundle);
+
+                                        // 채팅방의 멤버정보를 받아와서
+                                        // 채팅방의 정보를 가져오고 (각각)
+                                        // 그정보의 라스트 메세지를 수정해줍니다.
+
+                                        mChatMemberRef
+                                                .child(chat.getChatId())
+                                                .addListenerForSingleValueEvent(new ValueEventListener() {
+                                                    @Override
+                                                    public void onDataChange(DataSnapshot dataSnapshot) {
+                                                        Iterator<DataSnapshot> chatMemberIterator = dataSnapshot.getChildren().iterator();
+
+                                                        while ( chatMemberIterator.hasNext()) {
+                                                            User chatMember = chatMemberIterator.next().getValue(User.class);
+
+                                                            // chats -> {uid} -> {chat_id} - { ... }
+                                                            mFirebaseDatase
+                                                                    .getReference("users")
+                                                                    .child(chatMember.getUid())
+                                                                    .child("chats")
+                                                                    .child(chat.getChatId())
+                                                                    .child("lastMessage")
+                                                                    .setValue(exitMessage);
+                                                        }
+                                                    }
+
+                                                    @Override
+                                                    public void onCancelled(DatabaseError databaseError) {
+
+                                                    }
+                                                });
+
+
+
+
+                                        mFirebaseDatase.getReference("messages").child(chat.getChatId()).addListenerForSingleValueEvent(new ValueEventListener() {
+                                            @Override
+                                            public void onDataChange(DataSnapshot dataSnapshot) {
+                                                Iterator<DataSnapshot> messageIterator = dataSnapshot.getChildren().iterator();
+
+                                                while ( messageIterator.hasNext()) {
+                                                    DataSnapshot messageSnapshot = messageIterator.next();
+                                                    Message currentMessage = messageSnapshot.getValue(Message.class);
+                                                    if ( !currentMessage.getReadUserList().contains(mFirebaseUser.getUid())) {
+                                                        // message
+                                                        messageSnapshot.child("unreadCount").getRef().setValue(currentMessage.getUnreadCount() - 1);
+                                                    }
+                                                }
+                                            }
+
+                                            @Override
+                                            public void onCancelled(DatabaseError databaseError) {
+
+                                            }
+                                        });
+                                    }
+                                });
+
+                        /**
+                         * <추가 반영분>
+                         * 대화방의 타이틀이 변경됨을 알려주어 채팅방의 리스너가 감지하게 하여 방 이름을 업데이트 하게 해야합니다
+                         * 방의 제목은 방의 업데이트, 추가되었을때의 리스너가 처리하기때문에 방 제목만 변경 시켜서 변경이 되었음만 알리면 됩니다
+                         */
+                        mChatMemberRef.child(chat.getChatId()).addListenerForSingleValueEvent(new ValueEventListener() {
+                            @Override
+                            public void onDataChange(DataSnapshot dataSnapshot) {
+                                Iterator<DataSnapshot> memberIterator = dataSnapshot.getChildren().iterator();
+
+                                while( memberIterator.hasNext()) {
+                                    // 방 참여자의 UID를 가져오기 위하여 user 정보 조회
+                                    User chatMember = memberIterator.next().getValue(User.class);
+                                    // 해당 참여자의 방 정보의 업데이트를 위하여 방이름을 임의로 업데이트 진행
+                                    mFirebaseDatase.getReference("users")
+                                            .child(chatMember.getUid())
+                                            .child("chats")
+                                            .child(chat.getChatId())
+                                            .child("title")
+                                            .setValue("");
+                                }
+                            }
+
+                            @Override
+                            public void onCancelled(DatabaseError databaseError) {
+
+                            }
+                        });
+                    }
+                });
+            }
+        }).show();
     }
 
-//    @Override
-//    public void onActivityResult(int requestCode, int resultCode, Intent data) {
-//        super.onActivityResult(requestCode, resultCode, data);
-//        if ( requestCode == JOIN_ROOM_REQUEST_CODE ) {
-//            JOINED_ROOM = "";
-//        }
-//    }
-//
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if ( requestCode == JOIN_ROOM_REQUEST_CODE ) {
+            JOINED_ROOM = "";
+        }
+    }
+
     private enum DrawType  {
         ADD, UPDATE
     }
