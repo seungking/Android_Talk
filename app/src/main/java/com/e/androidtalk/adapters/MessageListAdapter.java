@@ -88,11 +88,9 @@ public class MessageListAdapter extends RecyclerView.Adapter<MessageListAdapter.
         TextMessage textMessage = null;
         PhotoMessage photoMessage = null;
 
-        if ( item.getMessageType() == Message.MessageType.TEXT) {
-            Log.d("log1","text");
+        if ( item instanceof TextMessage) {
             textMessage = (TextMessage) item;
-        } else {
-            Log.d("log1","photo");
+        } else if (item instanceof PhotoMessage) {
             photoMessage = (PhotoMessage) item;
         }
 

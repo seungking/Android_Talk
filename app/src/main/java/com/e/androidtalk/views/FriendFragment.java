@@ -94,8 +94,8 @@ public class FriendFragment extends Fragment {
                         public void onClick(View view) {
                             Intent chatIntent = new Intent(getActivity(), ChatActivity.class);
                             chatIntent.putExtra("uid", friend.getUid());
-                            startActivity(chatIntent);
-//                            startActivityForResult(chatIntent, ChatFragment.JOIN_ROOM_REQUEST_CODE);
+//                            startActivity(chatIntent);
+                            startActivityForResult(chatIntent, ChatFragment.JOIN_ROOM_REQUEST_CODE);
                         }
                     }).show();
                 } else {
@@ -106,8 +106,8 @@ public class FriendFragment extends Fragment {
                         public void onClick(View view) {
                             Intent chatIntent = new Intent(getActivity(), ChatActivity.class);
                             chatIntent.putExtra("uids", friendListAdapter.getSelectedUids());
-//                            startActivityForResult(chatIntent, ChatFragment.JOIN_ROOM_REQUEST_CODE);
-                            startActivity(chatIntent);
+                            startActivityForResult(chatIntent, ChatFragment.JOIN_ROOM_REQUEST_CODE);
+//                            startActivity(chatIntent);
                         }
                     }).show();
                 }

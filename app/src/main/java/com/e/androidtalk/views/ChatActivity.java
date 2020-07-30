@@ -104,7 +104,7 @@ public class ChatActivity extends AppCompatActivity {
         messageListAdapter = new MessageListAdapter();
         mChatRecyclerView.setLayoutManager(new LinearLayoutManager(this));
         mChatRecyclerView.setAdapter(messageListAdapter);
-//        mFirebaseAnalytics = FirebaseAnalytics.getInstance(this);
+        mFirebaseAnalytics = FirebaseAnalytics.getInstance(this);
     }
 
     private void initTotalunreadCount(){
@@ -418,7 +418,7 @@ public class ChatActivity extends AppCompatActivity {
                     @Override
                     public void onComplete(DatabaseError databaseError, DatabaseReference databaseReference) {
 //
-//                        mFirebaseAnalytics.logEvent("sendMessage", bundle);
+                        mFirebaseAnalytics.logEvent("sendMessage", bundle);
                         Iterator<DataSnapshot> memberIterator = dataSnapshot.getChildren().iterator();
                         while( memberIterator.hasNext()) {
                             User chatMember = memberIterator.next().getValue(User.class);
