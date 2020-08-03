@@ -84,7 +84,7 @@ public class MessageListAdapter extends RecyclerView.Adapter<MessageListAdapter.
         // 전달받은 뷰 홀터를 이용한 뷰 구현
         Message item = getItem(position);
 
-        Log.d("log1", item.getChatId() + item.getMessageType() + item.getMessageUser());
+//        Log.d("log1", item.getChatId() + item.getMessageType() + item.getMessageUser());
         TextMessage textMessage = null;
         PhotoMessage photoMessage = null;
 

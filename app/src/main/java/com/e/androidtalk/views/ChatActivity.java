@@ -343,25 +343,32 @@ public class ChatActivity extends AppCompatActivity {
             mImageStorageRef = FirebaseStorage.getInstance().getReference("/chats/").child(mChatId);
         }
         Log.d("log1","uploadimage");
-        mImageStorageRef.putFile(data).addOnCompleteListener(new OnCompleteListener<UploadTask.TaskSnapshot>() {
-            @Override
-            public void onComplete(@NonNull Task<UploadTask.TaskSnapshot> task) {
-               Log.d("log1","photo complete");
-                if ( task.isSuccessful() ) {
-                    mPhotoUrl = task.getResult().getUploadSessionUri().toString();
-                    mMessageType = Message.MessageType.PHOTO;
-                    sendMessage();
-                }
-            }
-        });
+//        mImageStorageRef.putFile(data).addOnCompleteListener(new OnCompleteListener<UploadTask.TaskSnapshot>() {
+//            @Override
+//            public void onComplete(@NonNull Task<UploadTask.TaskSnapshot> task) {
+//               Log.d("log1","photo complete");
+//                if ( task.isSuccessful() ) {
+//                    mPhotoUrl = task.getResult().getUploadSessionUri().toString();
+//                    mMessageType = Message.MessageType.PHOTO;
+//                    sendMessage();
+//                }
+//            }
+//        });
 
         mImageStorageRef.putFile(data).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
             @Override
             public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-                mPhotoUrl = taskSnapshot.getUploadSessionUri().toString();
-                Log.d("log1","photosuccess : " + mPhotoUrl);
-                mMessageType = Message.MessageType.PHOTO;
-                sendMessage();
+                mImageStorageRef.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+                    @Override
+                    public void onSuccess(Uri uri) {
+//                        mPhotoUrl = taskSnapshot.getUploadSessionUri().toString();
+                        mPhotoUrl = uri.toString();
+                        Log.d("log1","photosuccess : " + mPhotoUrl);
+                        mMessageType = Message.MessageType.PHOTO;
+                        sendMessage();
+                    }
+                });
+
             }
         });
         //firebase Storage
